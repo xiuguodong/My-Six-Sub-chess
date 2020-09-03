@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>black.jpg</file>
+        <file>chess.jpg</file>
+        <file>chess1.jpg</file>
+        <file>chess2.jpg</file>
+        <file>chess3.jpg</file>
+        <file>chess4.jpg</file>
+        <file>chess5.jpg</file>
+        <file>chess6.jpg</file>
+        <file>chess7.jpg</file>
+        <file>chess8.jpg</file>
+        <file>image.qrc</file>
+        <file>white.jpg</file>
+        <file>棋子棋盘.jpg</file>
+    </qresource>
+</RCC>
