@@ -26,12 +26,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    gamewindow.cpp
+    gamewindow.cpp \
+    checkfunction.cpp \
+    startfunctiong.cpp
 
 HEADERS += \
         mainwindow.h \
-    gamewindow.h
+    gamewindow.h \
+    checkfunction.h \
+    startfunctiong.h
 
 FORMS += \
         mainwindow.ui \
     gamewindow.ui
+
+
+CONFIG += C++11

@@ -24,8 +24,8 @@ QT_BEGIN_NAMESPACE
 class Ui_GameWindow
 {
 public:
-    QMenuBar *menubar;
     QWidget *centralwidget;
+    QMenuBar *menubar;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *GameWindow)
@@ -33,12 +33,13 @@ public:
         if (GameWindow->objectName().isEmpty())
             GameWindow->setObjectName(QStringLiteral("GameWindow"));
         GameWindow->resize(800, 600);
-        menubar = new QMenuBar(GameWindow);
-        menubar->setObjectName(QStringLiteral("menubar"));
-        GameWindow->setMenuBar(menubar);
         centralwidget = new QWidget(GameWindow);
         centralwidget->setObjectName(QStringLiteral("centralwidget"));
         GameWindow->setCentralWidget(centralwidget);
+        menubar = new QMenuBar(GameWindow);
+        menubar->setObjectName(QStringLiteral("menubar"));
+        menubar->setGeometry(QRect(0, 0, 800, 23));
+        GameWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(GameWindow);
         statusbar->setObjectName(QStringLiteral("statusbar"));
         GameWindow->setStatusBar(statusbar);
