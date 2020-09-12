@@ -21,7 +21,7 @@ private slots:
 
     void on_bntpeonet_clicked();
 
-    void on_bntnetnet_clicked();
+    //void on_bntnetnet_clicked();
 
 private:
     Ui::MainWindow *ui;

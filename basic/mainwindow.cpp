@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <gamewindow.h>
+#include "gamewindow.h"
+//#include "gamewindoweve.h"
+#include "gamewindowpve.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -24,13 +27,15 @@ void MainWindow::on_bntpeopeo_clicked()
 void MainWindow::on_bntpeonet_clicked()
 {
     this->close();
-    GameWindow* GMPN = new GameWindow;
+    GameWindowPVE* GMPN = new GameWindowPVE;
     GMPN->show();
+    qDebug()<<1;
 }
 
-void MainWindow::on_bntnetnet_clicked()
+/*void MainWindow::on_bntnetnet_clicked()
 {
     this->close();
-    GameWindow* GMNN = new GameWindow;
+    GameWindowEVE* GMNN = new GameWindowEVE;
     GMNN->show();
 }
+*/

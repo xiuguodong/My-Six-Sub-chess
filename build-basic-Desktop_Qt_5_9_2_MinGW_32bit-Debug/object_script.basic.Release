@@ -1,0 +1,12 @@
+INPUT(
+./release\main.o
+./release\mainwindow.o
+./release\gamewindow.o
+./release\checkfunction.o
+./release\startfunctiong.o
+./release\ai.o
+./release\gamewindowpve.o
+./release\moc_mainwindow.o
+./release\moc_gamewindow.o
+./release\moc_gamewindowpve.o
+);

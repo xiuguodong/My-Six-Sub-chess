@@ -1,5 +1,5 @@
-#include "gamewindow.h"
-#include "ui_gamewindow.h"
+#include "gamewindowpve.h"
+#include "ui_gamewindowpve.h"
 #include <QPalette>
 #include <QMouseEvent>
 #include <QPainter>
@@ -13,9 +13,9 @@
 #include <QMessageBox>
 #include <QAction>
 
-GameWindow::GameWindow(QWidget *parent) :
+GameWindowPVE::GameWindowPVE(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::GameWindow)
+    ui(new Ui::GameWindowPVE)
 {
     init();
     ui->setupUi(this);
@@ -26,10 +26,246 @@ GameWindow::GameWindow(QWidget *parent) :
     this->setPalette(palette);//设置背景色！
     centralWidget()->setMouseTracking(true);
     setMouseTracking(true);
-    nextchess=0;
 }
 
-void GameWindow::mouseMoveEvent(QMouseEvent *event)//!!!!
+void GameWindowPVE::actionByAi()
+{
+    if (alreadydone == 0)
+    {
+        chess[10][10] = 4 + peofirst;
+        waitforAi = 0;
+        nextchess = 1 - peofirst;
+        return ;
+    }
+    int final_socer = -0x3f3f3f3f,final_place = -1;
+    aiGetSocer();
+    for (int i = 0; i < 20; i ++)
+    {
+        for (int j = 0; j < 20; j ++)
+        {
+            if (chess[i][j] == 0)
+            {
+                 if (final_socer < source[i][j])
+                 {
+                     final_socer = source[i][j];
+                     final_place = i * 20 + j;
+                 }
+            }
+        }
+    }
+    chess[final_place/20][final_place%20] = 4 + peofirst;
+    qDebug() << final_place/20 <<' '<<final_place%20;
+    currentx = final_place/20;
+    currenty = final_place%20;
+    waitforAi = 0;
+    update();
+    int flag = 0;
+    if (peofirst == 0)
+    {
+        chess[currentx][currenty] = 4;
+        alreadydone++;
+        switch(check_ok(currentx,currenty))
+        {
+            case 0:break;
+            case 1:qDebug() << "超出边界";
+            chess[currentx][currenty] = 0,alreadydone--;goto loop1;
+            case 2:qDebug() << "五五禁手";
+            flag=-1;goto loop1;
+            case 3:qDebug() << "四四禁手";
+            flag=-1;goto loop1;
+        }
+        QWidget::update();
+        if (check_victom(currentx,currenty))
+        {
+            qDebug() << "黑棋胜";flag=1;
+        }
+        nextchess = 1;
+    }
+    else
+    {
+        alreadydone++;
+        switch(check_ok(currentx,currenty))
+        {
+            case 0:break;
+            case 1:qDebug() << "超出边界";
+            chess[currentx][currenty] = 0;alreadydone--;goto loop1;
+            //白棋无禁手
+        }
+        QWidget::update();
+        if (check_victom(currentx,currenty))
+        {
+            qDebug() << "白棋胜";flag=-1;
+        }
+        nextchess = 0;
+    }
+    loop1:;
+
+    if (flag == 1)
+    {
+        int ret = QMessageBox::question(this,"比赛结束","黑棋胜利",
+                              QMessageBox::Reset,QMessageBox::Close);
+        switch (ret)
+        {
+        case QMessageBox::Reset:
+            init();
+            break;
+        case QMessageBox::Close:
+            this->close();
+            break;
+        default:
+            break;
+        }
+    }
+    if (flag == -1)
+    {
+        int ret = QMessageBox::question(this,"比赛结束","白棋胜利",
+                              QMessageBox::Reset,QMessageBox::Close);
+        switch (ret)
+        {
+        case QMessageBox::Reset:
+            init();
+            break;
+        case QMessageBox::Close:
+            this->close();
+            break;
+        default:
+            break;
+        }
+    }
+    if (alreadydone == 400)
+    {
+        int ret = QMessageBox::question(this,"比赛结束","和棋",
+                              QMessageBox::Reset,QMessageBox::Close);
+        switch (ret)
+        {
+        case QMessageBox::Reset:
+            init();
+            break;
+        case QMessageBox::Close:
+            this->close();
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void GameWindowPVE::aiGetSocer()
+{
+    int personNum,aiNum,emptyNum;
+    for (int i = 0; i < 20; i ++)
+    {
+        for (int j = 0; j < 20; j ++)
+        {
+            source[i][j]=0;
+            if(chess[i][j] == 0)
+            {
+                chess[i][j] = 4 + peofirst;
+                if (check_ok(i,j) == 1||(peofirst == 0&&check_ok(i,j)!=0))
+                    continue;
+                chess[i][j] = 0;
+                for (int k = 0; k < 4; k ++)
+                {
+                    for (int p = -5; p <= 0; p ++)
+                    {
+                        personNum = 0;
+                        aiNum = 0;
+                        emptyNum = 0;
+                        int dx = i + f[k][0] * p;
+                        int dy = j + f[k][1] * p;
+                        if (dx<0||dy<0||dx>=20||dy>=20)continue;
+                        for (int l = 0; l < 6; l ++)
+                        {
+                            if (dx<0||dy<0||dx>=20||dy>=20)break;
+                            if (chess[dx][dy] == 4 + peofirst)
+                                aiNum ++;
+                            else if (chess[dx][dy] == 0)
+                                emptyNum ++;
+                            else
+                            {
+                                if (l + p < 0)
+                                    aiNum = 0,emptyNum = 0;
+                                break;
+                            }
+                            //if (k==0)qDebug() << dx <<' '<< dy;
+                            dx += f[k][0];
+                            dy += f[k][1];
+                        }
+                        if (aiNum + emptyNum < 6) continue;
+                        if (aiNum == 0)
+                            source[i][j] += 5;
+                        else if (aiNum == 1)
+                            source[i][j] += 10;
+                        else if (aiNum == 2)
+                        {
+                            source[i][j] += 20;
+                        }
+                        else if (aiNum == 3)
+                        {
+                            source[i][j] += 40;
+                        }
+                        else if (aiNum == 4)
+                        {
+                            source[i][j] += 200;
+                        }
+                        else if (aiNum == 5)
+                        {
+                            source[i][j] += 1000;
+                        }
+
+                    }
+                }
+                for (int k = 0; k < 4; k ++)
+                {
+                    for (int p = -5; p <= 0; p ++)
+                    {
+                        personNum = 0;
+                        aiNum = 0;
+                        emptyNum = 0;
+                        int dx = i + f[k][0] * p;
+                        int dy = j + f[k][1] * p;
+                        if (dx<0||dy<0||dx>=20||dy>=20)continue;
+                        for (int l = 0; l < 6; l ++)
+                        {
+                            if (dx<0||dy<0||dx>=20||dy>=20)break;
+                            if (chess[dx][dy] == 4 + peofirst)
+                            {
+                                if (l + p < 0)
+                                    personNum = 0,emptyNum = 0;
+                                break;
+                            }
+                            else if (chess[dx][dy] == 0)
+                                emptyNum ++;
+                            else
+                                personNum ++;
+                            //if (k==0)qDebug() << dx <<' '<< dy;
+                            dx += f[k][0];
+                            dy += f[k][1];
+                        }
+                        if (personNum == 1)
+                            source[i][j] += 10;
+                        else if (personNum == 2)
+                        {
+                            source[i][j] += 30;
+                        }
+                        else if (personNum == 3)
+                        {
+                            source[i][j] += 60;
+                        }
+                        else if (personNum == 4)
+                            source[i][j] += 300;
+                        else if (personNum == 5)
+                        {
+                            source[i][j] += 1500;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void GameWindowPVE::mouseMoveEvent(QMouseEvent *event)//取鼠标
 {
     movex = (event->y() - 45 )/ 30;
     movey = (event->x() - 25 )/ 30;
@@ -37,27 +273,34 @@ void GameWindow::mouseMoveEvent(QMouseEvent *event)//!!!!
     QWidget::update();
 }
 
-
-
-void GameWindow::mousePressEvent(QMouseEvent *event)
+void GameWindowPVE::mousePressEvent(QMouseEvent *event)//人走子
 {
+    if (waitforAi == 1)
+    {
+        qDebug() << "Ai思考中";
+        return ;
+    }
     int flag = 0;
     if (nextchess==0)
     {
+        //qDebug()<<"here";
         currentx = (event->y() - 45)/ 30;
         currenty = (event->x() - 25)/ 30;
+        if (currentx<0||currentx>=20||currenty<0||currenty>=20)
+        {
+            qDebug() << "超出边界";
+            return ;
+        }
         if (chess[currentx][currenty] != 0)
         {
             qDebug() << "该点已被下";
-            goto loop;
+            return ;
         }
         chess[currentx][currenty] = 4;
         alreadydone++;
         switch(check_ok(currentx,currenty))
         {
             case 0:break;
-            case 1:qDebug() << "超出边界";
-            chess[currentx][currenty] = 0,alreadydone--;goto loop;
             case 2:qDebug() << "五五禁手";
             chess[currentx][currenty] = 0;flag=-1;goto loop;
             case 3:qDebug() << "四四禁手";
@@ -74,18 +317,21 @@ void GameWindow::mousePressEvent(QMouseEvent *event)
     {
         currentx = (event->y() - 45)/ 30;
         currenty = (event->x() - 25)/ 30;
+        if (currentx<0||currentx>=20||currenty<0||currenty>=20)
+        {
+            qDebug() << "超出边界";
+            return ;
+        }
         if (chess[currentx][currenty] != 0)
         {
             qDebug() << "该点已被下";
-            goto loop;
+            return ;
         }
         chess[currentx][currenty] = 5;
         alreadydone++;
         switch(check_ok(currentx,currenty))
         {
             case 0:break;
-            case 1:qDebug() << "超出边界";
-            chess[currentx][currenty] = 0;alreadydone--;goto loop;
             //白棋无禁手
         }
         QWidget::update();
@@ -145,9 +391,11 @@ void GameWindow::mousePressEvent(QMouseEvent *event)
             break;
         }
     }
+    waitforAi = 1;
+    this->actionByAi();
 }
 
-void GameWindow::search()
+void GameWindowPVE::search()
 {
     for (int i = 0; i < 20; i ++)
     {
@@ -206,7 +454,7 @@ void GameWindow::search()
     }
 }
 
-int GameWindow::check_ok(int x,int y)
+int GameWindowPVE::check_ok(int x,int y)
 {
     if (x<0||x>=20||y<0||y>=20)
     {
@@ -294,7 +542,7 @@ int GameWindow::check_ok(int x,int y)
     return 0;
 }
 
-bool GameWindow::check_victom(int x,int y)
+bool GameWindowPVE::check_victom(int x,int y)
 {
     for (int i = 0; i < 4; i ++)
     if (chess_number[x][y][i] >= 6)
@@ -305,7 +553,7 @@ bool GameWindow::check_victom(int x,int y)
     return 0;
 }
 
-void GameWindow::init()
+void GameWindowPVE::init()
 {
     nextchess=0,alreadydone=0;
     for (int i = 0; i < 20; i ++)
@@ -313,6 +561,7 @@ void GameWindow::init()
         for (int j = 0; j < 20; j ++)
         {
             chess[i][j]=0;
+            source[i][j]=0;
         }
     }
     f[0][0]=0;f[0][1]=1;
@@ -323,9 +572,25 @@ void GameWindow::init()
     f[6][0]=-1;f[6][1]=-1;
     f[3][0]=-1;f[3][1]=1;
     f[7][0]=1;f[7][1]=-1;
+    int ret = QMessageBox::question(this,"人机对抗","是否先走？",
+                          QMessageBox::Yes,QMessageBox::No);
+    switch (ret)
+    {
+    case QMessageBox::Yes:
+        peofirst = 1;
+        waitforAi = 0;
+        break;
+    case QMessageBox::No:
+        peofirst = 0;
+        waitforAi = 1;
+        this->actionByAi();
+        break;
+    default:
+        break;
+    }
 }
 
-void GameWindow::paintEvent(QPaintEvent *event)
+void GameWindowPVE::paintEvent(QPaintEvent *event)//画棋盘
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing,true);
@@ -417,7 +682,7 @@ void GameWindow::paintEvent(QPaintEvent *event)
                      (currenty + 1)* 30+10,(currentx + 1)* 30 + 26+10);
 }
 
-GameWindow::~GameWindow()
+GameWindowPVE::~GameWindowPVE()
 {
     delete ui;
 }

@@ -27,18 +27,17 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     gamewindow.cpp \
-    checkfunction.cpp \
-    startfunctiong.cpp
+    gamewindowpve.cpp
 
 HEADERS += \
         mainwindow.h \
     gamewindow.h \
-    checkfunction.h \
-    startfunctiong.h
+    gamewindowpve.h
 
 FORMS += \
         mainwindow.ui \
-    gamewindow.ui
+    gamewindow.ui \
+    gamewindowpve.ui
 
 
 CONFIG += C++11
